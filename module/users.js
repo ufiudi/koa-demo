@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('../db')
 // 2.创建Schema（模型对象）
 const Schema = mongoose.Schema
 

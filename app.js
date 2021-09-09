@@ -11,14 +11,12 @@ const path = require('path')
 function resolve(dir) {
   return path.join(__dirname, dir)
 }
+
+const routerResponse = require('./middleware/routerResponse')// 统一接口返回数据
+
 const index = require('./routes/index')
 const users = require('./routes/users')
-const mongoose = require('mongoose')
-const db = require('./db')
-mongoose.connect(db.url)
-mongoose.connection.once('open', () => {
-  console.log('数据库链接成功')
-})
+
 // error handler
 onerror(app)
 
@@ -41,6 +39,8 @@ app.use(async(ctx, next) => {
   const ms = new Date() - start
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
 })
+
+app.use(routerResponse())
 
 // routes
 app.use(index.routes(), index.allowedMethods())
