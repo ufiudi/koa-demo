@@ -1,39 +1,53 @@
 const router = require('koa-router')()
-const personModel = require('../module/users')
-
+const UserModel = require('../module/users')
 router.prefix('/users')
-// 添加用户
+const { read } = require('../utils/fs')
+const { decrypt } = require('../utils/crypto')
+
+// 用户测试接口
+/**
+ * @swagger
+ * /users/test:
+ *   get:
+ *     summary: 用户测试接口
+ *     description: 用户测试接口
+ *     tags:
+ *       - users
+ *     responses:
+ *       200:
+ *         description: 成功
+ */
+router.get('/test', async ctx => {
+  ctx.success('users works...', '成功')
+})
+
+// 注册用户
 /**
  * @swagger
  * definitions:
- *  addparam:
+ *  registerparam:
  *    properties:
  *      name:
  *        type: "string"
  *        default: ""
- *        description: 姓名
- *      age:
+ *        description: name
+ *      email:
  *        type: "number"
  *        default: ""
- *        description: 年龄
- *      chat:
+ *        description: 邮箱
+ *      password:
  *        type: "string"
  *        default: ""
- *        description: chat
- *      height:
- *        type: "string"
- *        default: ""
- *        description: height
+ *        description: 密码
  */
-
 /**
  * @swagger
- * /users/add:
+ * /users/register:
  *   post:
- *     summary: 添加用户
- *     description: 添加用户
+ *     summary: 注册用户
+ *     description: 注册用户
  *     tags:
- *       - user
+ *       - users
  *     consumes:
  *      - application/json
  *      - application/xml
@@ -44,133 +58,34 @@ router.prefix('/users')
  *       - name: body
  *         in: body
  *         schema:
- *          $ref: '#/definitions/addparam'
+ *          $ref: '#/definitions/registerparam'
  *     responses:
  *       200:
  *         description: 成功
  */
-router.post('/add', async(ctx, next) => {
+router.post('/register', async ctx => {
   const postData = ctx.request.body
-  const { name } = postData
-  const result = await personModel.findOne({ name })
-  if (result) {
-    ctx.fail('用户已经存在', -1)
-    return
+  // 通过邮箱判读是否注册过
+  const findResult = await UserModel.find({ email: postData.email })
+  if (findResult.length) {
+    ctx.fail('邮箱已被占用', '-1')
+  } else {
+    // 没查到
+    // 解密
+    const addmdData = await read('../rsa-prv.pem')
+    console.log(postData.password)
+    console.log('--------------------------')
+    const decmPass = decrypt(postData.password, addmdData).toString()
+    console.log(decmPass)
+    const newUser = new UserModel({
+      name: postData.name,
+      email: postData.email,
+      password: decmPass
+    })
+
+    const user = await newUser.save()
+    ctx.success(user, '成功')
   }
-  const saveData = await personModel.create(postData)
-  ctx.success(saveData._id, '保存成功')
 })
 
-// 获取用户列表
-/**
- * @swagger
- * /users/list:
- *   get:
- *     summary: 获取用户列表
- *     description: 获取用户列表
- *     tags:
- *       - user
- *     parameters:
- *       - name: name
- *         in: query
- *         required: false
- *         description: 姓名
- *         type: string
- *       - name: age
- *         in: query
- *         required: false
- *         description: 年龄
- *         type: number
- *     responses:
- *       200:
- *         description: 成功
- */
-router.get('/list', async(ctx, next) => {
-  const getData = ctx.query
-  const result = await personModel.find({ ...getData })
-  ctx.success(result, '成功')
-})
-
-// 删除用户
-/**
- * @swagger
- * /users/remove:
- *   get:
- *     summary: 删除用户
- *     description: 删除用户
- *     tags:
- *       - user
- *     parameters:
- *       - name: name
- *         in: query
- *         required: true
- *         description: 姓名
- *         type: string
- *     responses:
- *       200:
- *         description: 成功
- */
-router.get('/remove', async(ctx, next) => {
-  const postData = ctx.query
-  await personModel.remove({ ...postData })
-  ctx.success('', '删除成功')
-})
-
-/**
- * @swagger
- * definitions:
- *  updateparam:
- *    properties:
- *      _id:
- *        type: "string"
- *        default: ""
- *        description: id
- *      name:
- *        type: "string"
- *        default: ""
- *        description: 姓名
- *      age:
- *        type: "number"
- *        default: ""
- *        description: 年龄
- *      chat:
- *        type: "string"
- *        default: ""
- *        description: chat
- *      height:
- *        type: "string"
- *        default: ""
- *        description: height
- * /users/update:
- *   post:
- *     summary: 更新用户
- *     description: 更新用户
- *     tags:
- *       - user
- *     consumes:
- *      - application/json
- *      - application/xml
- *     produces:
- *      - application/json
- *      - application/xml
- *     parameters:
- *       - name: body
- *         in: body
- *         schema:
- *          $ref: '#/definitions/updateparam'
- *     responses:
- *       200:
- *         description: 成功
- */
-router.post('/update', async(ctx, next) => {
-  const postData = ctx.request.body
-  const { _id } = postData
-
-  if (!_id) {
-    ctx.fail('无效的id', '-1')
-    return
-  }
-  await personModel.updateOne({ _id }, postData)
-  ctx.success('', '更新成功')
-})
 module.exports = router

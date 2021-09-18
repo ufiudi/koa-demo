@@ -2,18 +2,27 @@ const mongoose = require('../db')
 // 2.创建Schema（模型对象）
 const Schema = mongoose.Schema
 
-const personSchema = new Schema({
-  name: String,
-  age: Number,
-  sex: {
+const UserSchema = new Schema({
+  name: {
     type: String,
-    default: '男'
+    required: true
   },
-  chat: String
+  email: {
+    type: String,
+    required: true
+  },
+  password: {
+    type: String,
+    require: true
+  },
+  avatar: {
+    type: String
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  }
 })
-personSchema.add({
-  height: Number
-})
-const personModel = mongoose.model('person', personSchema)
+const UserModel = mongoose.model('users', UserSchema)
 
-module.exports = personModel
+module.exports = UserModel
