@@ -1,5 +1,5 @@
 const user = 'gaochengyao'
-const password = 'gao7641081'
+const password = '12345678a'
 const db = 'test'
 const url = `mongodb+srv://${user}:${password}@gcylearn.jyjni.mongodb.net/${db}`
 const mongoose = require('mongoose')
