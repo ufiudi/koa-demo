@@ -8,7 +8,7 @@ const swaggerDefinition = {
     version: '1.0.0',
     description: 'API'
   },
-  host: 'localhost:3000',
+  host: '0.0.0.0:3000',
   //   schemes: ['https', 'http'],
   basePath: '/' // Base path (optional)
 }
